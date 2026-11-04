@@ -1,5 +1,5 @@
 (function(){
-const L=(()=>{try{return localStorage.getItem('lang')}catch(e){return null}})(),C=Object.assign({},window.CONFIG,L==='en'&&window.CONFIG.en?window.CONFIG.en:{}),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const L=(()=>{try{const q=new URLSearchParams(location.search).get('lang');if(q==='en'||q==='bn')return q;return localStorage.getItem('lang')}catch(e){return null}})(),C=Object.assign({},window.CONFIG,L==='en'&&window.CONFIG.en?window.CONFIG.en:{}),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const R=document.documentElement,cols=['#ff6b9d','#ffd166','#7bdff2','#b39cf4','#80ed99','#ff9f68'];
 Object.entries(C.colors||{}).forEach(([k,v])=>R.style.setProperty('--'+k,v));
 const seg=s=>{const raw=(window.Intl&&Intl.Segmenter)?Array.from(new Intl.Segmenter('bn',{granularity:'grapheme'}).segment(s),x=>x.segment):(s.match(/\P{M}(?:\u09CD\P{M}|[\p{M}\u200C\u200D])*/gu)||[]);
@@ -17,7 +17,7 @@ const seg=s=>{const raw=(window.Intl&&Intl.Segmenter)?Array.from(new Intl.Segmen
   document.body.prepend(bg);
 })();
 
-if(window.CONFIG.en){const t=document.createElement('button');t.id='lng';t.textContent=L==='en'?'বাংলা':'English';t.onclick=()=>{try{localStorage.setItem('lang',L==='en'?'bn':'en');sessionStorage.setItem('skipIntro','1')}catch(e){}location.reload()};document.body.appendChild(t)}
+if(window.CONFIG.en){const t=document.createElement('button');t.id='lng';t.textContent=L==='en'?'বাংলা':'English';t.onclick=()=>{const nl=L==='en'?'bn':'en';try{localStorage.setItem('lang',nl)}catch(e){}try{sessionStorage.setItem('skipIntro','1')}catch(e){}location.href=location.pathname+'?lang='+nl};document.body.appendChild(t)}
 /* ================= confetti ================= */
 const cv=document.createElement('canvas');cv.id='conf';document.body.appendChild(cv);
 const cx=cv.getContext('2d');let P=[];
@@ -30,34 +30,39 @@ window.confetti=n=>{for(let i=0;i<n;i++)P.push({x:innerWidth/2+(Math.random()-.5
 
 /* ================= sound effects ================= */
 let AC=null;
-function ac(){try{if(!AC){const X=window.AudioContext||window.webkitAudioContext;if(X)AC=new X()}if(AC&&AC.state!=='running')AC.resume()}catch(e){}return AC}
+let MASTER=null;
+function ac(){try{if(!AC){const X=window.AudioContext||window.webkitAudioContext;if(X){AC=new X();MASTER=AC.createGain();MASTER.gain.value=3;const cp=AC.createDynamicsCompressor();MASTER.connect(cp);cp.connect(AC.destination)}}if(AC&&AC.state!=='running'){const r=AC.resume();if(r&&r.catch)r.catch(()=>{})}}catch(e){}return AC}
+const safe=f=>(...a)=>{try{return f(...a)}catch(e){}};
 ['pointerdown','touchstart','click'].forEach(ev=>addEventListener(ev,ac,{passive:true}));
 function tone(f,t0,dur,vol,type){const a=ac();if(!a)return;const t=a.currentTime+t0,o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);
-  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05)}
-function sPop(){const a=ac();if(!a)return;const t=a.currentTime,n=Math.floor(a.sampleRate*.14),buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(MASTER);o.start(t);o.stop(t+dur+.05)}
+function sPop_(){const a=ac();if(!a)return;const t=a.currentTime,n=Math.floor(a.sampleRate*.14),buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
   for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);
   const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(4000,t);f.frequency.exponentialRampToValueAtTime(300,t+.14);
-  const g=a.createGain();g.gain.value=1;s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);
-  const o=a.createOscillator(),og=a.createGain();o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(60,t+.12);og.gain.setValueAtTime(.6,t);og.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(og);og.connect(a.destination);o.start(t);o.stop(t+.16)}
-function sWish(){[784,988,1175,1568].forEach((f,i)=>tone(f,.1+i*.09,.5,.22,'triangle'))}
-function sTick(){tone(900,0,.09,.18,'sine');tone(1350,.04,.09,.12,'sine')}
-function sTada(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.55,.2,'triangle'));tone(1319,.45,.8,.18,'triangle')}
-function sOpen(){[660,880,1100].forEach((f,i)=>tone(f,i*.12,.45,.2,'sine'))}
+  const g=a.createGain();g.gain.value=1.4;s.connect(f);f.connect(g);g.connect(MASTER);s.start(t);
+  const o=a.createOscillator(),og=a.createGain();o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(60,t+.12);og.gain.setValueAtTime(.6,t);og.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(og);og.connect(MASTER);o.start(t);o.stop(t+.16)}
+function sWish_(){[784,988,1175,1568].forEach((f,i)=>tone(f,.1+i*.09,.5,.35,'triangle'))}
+function sTick_(){tone(900,0,.09,.3,'sine');tone(1350,.04,.09,.2,'sine')}
+function sTada_(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.55,.35,'triangle'));tone(1319,.45,.8,.3,'triangle')}
+function sOpen_(){[660,880,1100].forEach((f,i)=>tone(f,i*.12,.45,.35,'sine'))}
+const sPop=safe(sPop_),sWish=safe(sWish_),sTick=safe(sTick_),sTada=safe(sTada_),sOpen=safe(sOpen_);
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.btn,.again,#lng,#mus,#lb button,.snd'))sTick()},true);
 
 /* ================= gaan ================= */
 let music=null,userOff=false;
 if(C.music&&C.music.src){
-  const a=new Audio(C.music.src);a.loop=true;a.preload='auto';a.volume=.7;
+  const a=new Audio(C.music.src);a.loop=true;a.preload='auto';a.volume=.55;a.muted=true;a.setAttribute('playsinline','');
   const b=document.createElement('button');b.id='mus';b.textContent=C.music.label||'🎵';document.body.appendChild(b);
   a.onerror=()=>b.remove();
-  const upd=()=>b.classList.toggle('off',a.paused);a.onplay=a.onpause=upd;upd();
-  b.onclick=()=>{if(a.paused){userOff=false;a.play().catch(()=>{})}else{userOff=true;a.pause()}};
+  const upd=()=>b.classList.toggle('off',a.paused||a.muted);a.onplay=a.onpause=a.onvolumechange=upd;upd();a.play().catch(()=>{});
+  b.onclick=()=>{if(a.paused||a.muted){userOff=false;a.muted=false;a.play().catch(()=>{})}else{userOff=true;a.pause()}};
   music=a;
 }
-const startMusic=()=>{if(music&&music.paused&&!userOff)music.play().catch(()=>{})};
-if(music){const kick=()=>startMusic();['pointerdown','touchend','click'].forEach(ev=>addEventListener(ev,kick,{passive:true}));
-  music.addEventListener('playing',()=>['pointerdown','touchend','click'].forEach(ev=>removeEventListener(ev,kick)),{once:true})}
+const startMusic=()=>{if(music&&!userOff){music.muted=false;if(music.paused)music.play().catch(()=>{})}};
+if(music){const evs=['touchend','pointerup','click','keydown'];
+  const kick=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#mus,.snd'))return;startMusic();if(!music.paused&&!music.muted)evs.forEach(x=>removeEventListener(x,kick,true))};
+  evs.forEach(x=>addEventListener(x,kick,true));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&music&&!music.muted&&music.paused&&!userOff)music.play().catch(()=>{})})}
 
 /* ================= cute type helpers ================= */
 // proti akkhor lafiye uthe, tarpor dheu er moto nache
@@ -144,7 +149,8 @@ function start(){clearInterval(timer);spawn();timer=setInterval(spawn,3200)}
 $('again').onclick=()=>{popped.clear();$('cnt').textContent='';$('note').textContent=C.wishHint;sky.scrollIntoView({behavior:'smooth',block:'center'});start()};
 
 const enter=()=>{
-  sTada();$('intro').classList.add('gone');$('main').classList.add('show');window.scrollTo(0,0);
+  try{sTada()}catch(e){}
+  $('intro').classList.add('gone');$('main').classList.add('show');window.scrollTo(0,0);
   letters($('title'),C.title);typeInto($('sub'),C.subtitle,38);
   start();confetti(120);startMusic();
   document.querySelectorAll('.m').forEach(m=>io.observe(m));
@@ -198,5 +204,5 @@ $('env').onclick=async()=>{
   $('skip').style.display='block';if(!await w(1500))return;
   write(id);
 };
-try{if(sessionStorage.getItem('skipIntro')){sessionStorage.removeItem('skipIntro');enter()}}catch(e){}
+try{if(sessionStorage.getItem('skipIntro')){sessionStorage.removeItem('skipIntro');setTimeout(()=>{try{enter()}catch(e){$('intro').click()}},60)}}catch(e){}
 })();
