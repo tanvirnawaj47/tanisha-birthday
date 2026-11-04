@@ -1,5 +1,5 @@
 (function(){
-const L=(()=>{try{const q=new URLSearchParams(location.search).get('lang');if(q==='en'||q==='bn')return q;return localStorage.getItem('lang')}catch(e){return null}})(),C=Object.assign({},window.CONFIG,L==='en'&&window.CONFIG.en?window.CONFIG.en:{}),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const L=(()=>{try{return new URLSearchParams(location.search).get('lang')==='en'?'en':'bn'}catch(e){return 'bn'}})(),C=Object.assign({},window.CONFIG,L==='en'&&window.CONFIG.en?window.CONFIG.en:{}),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const R=document.documentElement,cols=['#ff6b9d','#ffd166','#7bdff2','#b39cf4','#80ed99','#ff9f68'];
 Object.entries(C.colors||{}).forEach(([k,v])=>R.style.setProperty('--'+k,v));
 const seg=s=>{const raw=(window.Intl&&Intl.Segmenter)?Array.from(new Intl.Segmenter('bn',{granularity:'grapheme'}).segment(s),x=>x.segment):(s.match(/\P{M}(?:\u09CD\P{M}|[\p{M}\u200C\u200D])*/gu)||[]);
@@ -18,6 +18,10 @@ const seg=s=>{const raw=(window.Intl&&Intl.Segmenter)?Array.from(new Intl.Segmen
 })();
 
 if(window.CONFIG.en){const t=document.createElement('button');t.id='lng';t.textContent=L==='en'?'বাংলা':'English';t.onclick=()=>{const nl=L==='en'?'bn':'en';try{localStorage.setItem('lang',nl)}catch(e){}try{sessionStorage.setItem('skipIntro','1')}catch(e){}location.href=location.pathname+'?lang='+nl};document.body.appendChild(t)}
+let hint=null;
+(function(){if(!window.CONFIG.en)return;let skipping=null;try{skipping=sessionStorage.getItem('skipIntro')}catch(e){}if(skipping)return;
+  hint=document.createElement('div');hint.id='lngHint';hint.textContent=C.langHint||(L==='en'?'বাংলায় পড়তে এখানে চাপুন':'English এ পড়তে এখানে চাপুন');document.body.appendChild(hint)})();
+const hideHint=ms=>{if(!hint)return;const h=hint;setTimeout(()=>{h.classList.add('hide');setTimeout(()=>h.remove(),700)},ms||0)};
 /* ================= confetti ================= */
 const cv=document.createElement('canvas');cv.id='conf';document.body.appendChild(cv);
 const cx=cv.getContext('2d');let P=[];
@@ -41,11 +45,15 @@ function sPop_(){const a=ac();if(!a)return;const t=a.currentTime,n=Math.floor(a.
   const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(4000,t);f.frequency.exponentialRampToValueAtTime(300,t+.14);
   const g=a.createGain();g.gain.value=1.4;s.connect(f);f.connect(g);g.connect(MASTER);s.start(t);
   const o=a.createOscillator(),og=a.createGain();o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(60,t+.12);og.gain.setValueAtTime(.6,t);og.gain.exponentialRampToValueAtTime(.001,t+.14);o.connect(og);og.connect(MASTER);o.start(t);o.stop(t+.16)}
+function sKey_(){const a=ac();if(!a)return;const t=a.currentTime,n=Math.floor(a.sampleRate*.03),buf=a.createBuffer(1,n,a.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2);
+  const s=a.createBufferSource();s.buffer=buf;const f=a.createBiquadFilter();f.type='bandpass';f.frequency.value=1600+Math.random()*1800;f.Q.value=1.1;
+  const g=a.createGain();g.gain.value=.45;s.connect(f);f.connect(g);g.connect(MASTER);s.start(t);tone(150+Math.random()*50,0,.05,.1,'square')}
 function sWish_(){[784,988,1175,1568].forEach((f,i)=>tone(f,.1+i*.09,.5,.35,'triangle'))}
 function sTick_(){tone(900,0,.09,.3,'sine');tone(1350,.04,.09,.2,'sine')}
 function sTada_(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.55,.35,'triangle'));tone(1319,.45,.8,.3,'triangle')}
 function sOpen_(){[660,880,1100].forEach((f,i)=>tone(f,i*.12,.45,.35,'sine'))}
-const sPop=safe(sPop_),sWish=safe(sWish_),sTick=safe(sTick_),sTada=safe(sTada_),sOpen=safe(sOpen_);
+const sKey=safe(sKey_),sPop=safe(sPop_),sWish=safe(sWish_),sTick=safe(sTick_),sTada=safe(sTada_),sOpen=safe(sOpen_);
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.btn,.again,#lng,#mus,#lb button,.snd'))sTick()},true);
 
 /* ================= gaan ================= */
@@ -150,6 +158,7 @@ $('again').onclick=()=>{popped.clear();$('cnt').textContent='';$('note').textCon
 
 const enter=()=>{
   try{sTada()}catch(e){}
+  hideHint(7000);
   $('intro').classList.add('gone');$('main').classList.add('show');window.scrollTo(0,0);
   letters($('title'),C.title);typeInto($('sub'),C.subtitle,38);
   start();confetti(120);startMusic();
@@ -167,7 +176,7 @@ function resetLetter(){
   $('stage').style.display='';$('stage').classList.remove('out');$('env').classList.remove('open');$('card').classList.remove('up');
   $('hint').style.opacity=1;$('skip').style.display='none';
 }
-$('lbtn').onclick=()=>{resetLetter();$('main').classList.remove('show');$('letter').classList.add('show');window.scrollTo(0,0);startMusic()};
+$('lbtn').onclick=()=>{hideHint(0);resetLetter();$('main').classList.remove('show');$('letter').classList.add('show');window.scrollTo(0,0);startMusic()};
 $('back').onclick=()=>{resetLetter();$('letter').classList.remove('show');$('main').classList.add('show');window.scrollTo(0,0)};
 $('skip').onclick=()=>{skip=true;$('skip').style.display='none'};
 
@@ -181,6 +190,7 @@ async function write(id){
       if(id!==run)return;
       tn.data+=g;
       if(skip)continue;
+      if(/\S/.test(g))sKey();
       if(++n%12==0)follow(pen);
       if(/[.!?।,]/.test(g)||n%35==0){const r=pen.getBoundingClientRect();heart(r.left,r.top)}
       await sleep(/[.!?।]/.test(g)?base*8:/[,]/.test(g)?base*4:base);
