@@ -31,12 +31,13 @@ window.CONFIG = {
 
   momentsTitle: "Our Moments 📸",
   moments: [
-    { src: "assets/photos/1.jpg", caption: "হাসির গল্প" },
-    { src: "assets/photos/2.jpg", caption: "আড্ডা আর চা" },
-    { src: "assets/videos/1.mp4", caption: "একটা পাগলা মুহূর্ত" },
-    { src: "assets/photos/3.jpg", caption: "সেই সুন্দর বিকেল" },
-    { src: "assets/photos/4.jpg", caption: "সেই হাসির দিন" },
-    { src: "assets/videos/2.mp4", caption: "তোর দিন" }
+    { src: "assets/photos/1.jpg?v=2" },
+    { src: "assets/photos/2.jpg?v=2" },
+    { src: "assets/videos/1.mp4" },
+    { src: "assets/photos/3.jpg?v=2" },
+    { src: "assets/photos/4.jpg?v=2" },
+    { src: "assets/videos/2.mp4" },
+    { src: "assets/photos/5.jpg?v=2" }
   ],
 
  letterButton: "💌 Tanisha's letter",
@@ -77,13 +78,14 @@ window.CONFIG = {
     ],
     momentsTitle: "Our Moments 📸",
     moments: [
-      { src: "assets/photos/1.jpg", caption: "Stories of laughter" },
-      { src: "assets/photos/2.jpg", caption: "Adda & tea" },
-      { src: "assets/videos/1.mp4", caption: "One crazy moment" },
-      { src: "assets/photos/3.jpg", caption: "That lovely evening" },
-      { src: "assets/photos/4.jpg", caption: "That happy day" },
-      { src: "assets/videos/2.mp4", caption: "Your day" }
-    ],
+    { src: "assets/photos/1.jpg?v=2" },
+    { src: "assets/photos/2.jpg?v=2" },
+    { src: "assets/videos/1.mp4" },
+    { src: "assets/photos/3.jpg?v=2" },
+    { src: "assets/photos/4.jpg?v=2" },
+    { src: "assets/videos/2.mp4" },
+    { src: "assets/photos/5.jpg?v=2" }
+  ],
     letterButton: "💌 Tanisha's letter",
     letterOpenHint: "Tap to open the letter",
     letterSkip: "Skip ⏩",

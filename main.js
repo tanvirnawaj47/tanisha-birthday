@@ -111,7 +111,8 @@ const vio=new IntersectionObserver(es=>es.forEach(e=>{const v=e.target;
 C.moments.forEach((m,i)=>{
   const d=document.createElement('div'),vid=isV(m.src);
   d.className='m';d.style.setProperty('--r',((i%2?1:-1)*(1.5+i%3))+'deg');d.style.transitionDelay=(i%2)*.15+'s';
-  d.innerHTML=`<div class="pol" style="--d:-${i*.9}s"><div class="ph">${em[i%em.length]}</div><p>${m.caption||''}</p></div>`;
+  d.style.setProperty('--sx',(i%2?1:-1)*70+'px');
+  d.innerHTML=`<div class="pol${m.caption?'':' nocap'}" style="--d:-${i*.9}s"><div class="ph">${em[i%em.length]}</div>${m.caption?'<p>'+m.caption+'</p>':''}</div>`;
   const ph=d.querySelector('.ph');
   if(vid){
     const v=document.createElement('video'),sb=document.createElement('button');
